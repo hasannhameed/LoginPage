@@ -1,31 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useReducer } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 
+
+const emailReducer = (state, action) => {
+  if (action.type === 'USER_INPUT') {
+    return { value: action.val, isValid: action.val.includes('@') };
+  }
+  if (action.type === 'INPUT_BLUR') {
+    return { value: state.value, isValid: state.value.includes('@') };
+  }
+  return { value: '', isValid: false };
+};
+
+
+
 const Login = (props) => {
-  const [enteredEmail, setEnteredEmail] = useState('');
-  const [emailIsValid, setEmailIsValid] = useState();
-  const [enteredPassword, setEnteredPassword] = useState('');
+  //const [enteredEmail, setEnteredEmail] = useState('');
+  // const [emailIsValid, setEmailIsValid] = useState();
+   const [enteredPassword, setEnteredPassword] = useState('');
   const [passwordIsValid, setPasswordIsValid] = useState();
   const [enteredcollegename,setCollegeName] = useState('');
   const [collegeIsValid, setcollegeIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
 
-  useEffect(() => {
+   
 
-    setFormIsValid(
-    enteredEmail.includes('@') && enteredPassword.trim().length > 6 && enteredcollegename.trim().length > 1
-    );
-  }, [enteredEmail,enteredPassword,enteredcollegename]);
+  const[emailState, dispatchEmail] = useReducer(emailReducer,{
+    
+    value:'',
+    isValid: null,
+  });
+
+  useEffect(() =>{
+    console.log('EFFECT RUNNING');
+
+    return()=>{
+      console.log("effect cleaningUP");
+    }
+  },[]);
+
+  // useEffect(() => {
+  //   const identifier = setTimeout(() => {
+  //     setFormIsValid(
+  //       enteredEmail.includes('@') && enteredPassword.trim().length > 6 && enteredcollegename.trim().length > 1
+  //     );
+  //   }, 500);
+  
+  //   return () => {
+  //     console.log('CLEANUP');
+  //     clearTimeout(identifier);
+  //   };
+  // }, [enteredEmail, enteredPassword, enteredcollegename]);
+  
   
 
   const emailChangeHandler = (event) => {
 
-    setEnteredEmail(event.target.value);
+    dispatchEmail({type:'USER_INPUT',val:event.target.value});
     setFormIsValid(
-      event.target.value.includes('@') && enteredPassword.trim().length > 6 && enteredcollegename.trim().length > 1
+      event.target.value.includes('@') &&
+      enteredPassword.trim().length > 6 &&
+      enteredcollegename.trim().length > 1
     );
   };
 
@@ -33,7 +71,9 @@ const Login = (props) => {
     setEnteredPassword(event.target.value);
 
     setFormIsValid(
-      event.target.value.trim().length > 6 && enteredEmail.includes('@') && enteredcollegename.trim().length > 1
+      event.target.value.trim().length > 6 &&
+       emailState.value.includes('@') &&
+       enteredcollegename.trim().length > 1
     );
   };
 
@@ -41,12 +81,15 @@ const Login = (props) => {
     setCollegeName(event.target.value);
 
     setFormIsValid(
-      event.target.value.trim().length > 1 && enteredEmail.includes('@') && enteredPassword.trim().length > 6
+      event.target.value.trim().length > 1 && 
+      emailState.value.includes('@') && 
+      enteredPassword.trim().length > 6
     );
   };
+ 
 
   const validateEmailHandler = () => {
-    setEmailIsValid(enteredEmail.includes('@'));
+   dispatchEmail({type: 'INPUT_BLUR'});
   };
 
   const validatePasswordHandler = () => {
@@ -58,7 +101,7 @@ const Login = (props) => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(enteredEmail, enteredPassword,enteredcollegename);
+    props.onLogin(emailState.value, enteredPassword,enteredcollegename);
   };
 
   return (
@@ -66,14 +109,14 @@ const Login = (props) => {
       <form onSubmit={submitHandler}>
         <div
           className={`${classes.control} ${
-            emailIsValid === false ? classes.invalid : ''
+            emailState.isValid === false ? classes.invalid : ''
           }`}
         >
           <label htmlFor="email">E-Mail</label>
           <input
             type="email"
             id="email"
-            value={enteredEmail}
+            value={emailState.value}
             onChange={emailChangeHandler}
             onBlur={validateEmailHandler}
           />
